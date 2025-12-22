@@ -28,12 +28,13 @@ struct VideoPlayerContainer: View {
                     .padding(horizontalPadding)
 //                    .containerRelativeFrame([.horizontal])
                     .containerRelativeFrame(.vertical, count: 1, spacing: 20, alignment: .center)
-                    .scrollTransition(.animated.threshold(.visible(0.9))) { content, phase in
+                    .scrollTransition(.animated.threshold(.centered)) { content, phase in
                         switch phase {
                         case .identity:
                             Task { @MainActor in
-                                service.currentPlayerItemId = playerItem.id
-                                service.loadCurrentVideoPlayerItem(for: playerItem.id)
+                                service.stopAutoplay(for: playerItem.id)
+                                service.loadVideoPlayerItem(for: playerItem.id)
+                                service.startAutoplay(for: playerItem.id)
                                 // service.startAutoplayForVideoPlayer...
                             }
                         case .bottomTrailing:

@@ -33,18 +33,31 @@ public class VideoService {
         id == currentPlayerItemId
     }
     
-    public func loadCurrentVideoPlayerItem(for id: UUID) {
-        interstitialVideoPlayer.pause()
-        videoPlayer.pause()
+    public func loadVideoPlayerItem(for id: UUID) {
         if let item = playerItems.first(where: { $0.id == id }) {
             switch item.contentType {
             case .interstitial:
                 currentInterstitialVideoPlayerItem = .init(url: item.source)
                 interstitialVideoPlayer.replaceCurrentItem(with: currentInterstitialVideoPlayerItem)
-                interstitialVideoPlayer.play()
             case .video:
                 currentVideoPlayerItem = .init(url: item.source)
                 videoPlayer.replaceCurrentItem(with: currentVideoPlayerItem)
+            }
+        }
+    }
+    
+    public func stopAutoplay(for id: UUID) {
+        interstitialVideoPlayer.pause()
+        videoPlayer.pause()
+    }
+    
+    public func startAutoplay(for id: UUID) {
+        currentPlayerItemId = id
+        if let item = playerItems.first(where: { $0.id == id }) {
+            switch item.contentType {
+            case .interstitial:
+                interstitialVideoPlayer.play()
+            case .video:
                 videoPlayer.play()
             }
         }
@@ -80,5 +93,10 @@ public class VideoService {
 extension VideoService {
     public func loadSampleItems() {
         self.playerItems = .init(VideoPlayerSamples.videoPlayerItems)
+        if let first = self.playerItems.first {
+            self.stopAutoplay(for: first.id)
+            self.loadVideoPlayerItem(for: first.id)
+            self.startAutoplay(for: first.id)
+        }
     }
 }
