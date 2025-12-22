@@ -15,6 +15,9 @@ public class VideoService {
     public var currentPlayerItemId: UUID? = nil
     public var playerItems: Deque<VideoPlayerItem> = []
     
+    public var videoPlayerIsPlaying: Bool = false
+    public var interstitialVideoPlayerIsPlaying: Bool = false
+    
     @ObservationIgnored public var videoPlayer: AVPlayer = .init()
     @ObservationIgnored public var interstitialVideoPlayer: AVPlayer = .init()
     
@@ -30,6 +33,23 @@ public class VideoService {
         id == currentPlayerItemId
     }
     
+    public func loadCurrentVideoPlayerItem(for id: UUID) {
+        interstitialVideoPlayer.pause()
+        videoPlayer.pause()
+        if let item = playerItems.first(where: { $0.id == id }) {
+            switch item.contentType {
+            case .interstitial:
+                currentInterstitialVideoPlayerItem = .init(url: item.source)
+                interstitialVideoPlayer.replaceCurrentItem(with: currentInterstitialVideoPlayerItem)
+                interstitialVideoPlayer.play()
+            case .video:
+                currentVideoPlayerItem = .init(url: item.source)
+                videoPlayer.replaceCurrentItem(with: currentVideoPlayerItem)
+                videoPlayer.play()
+            }
+        }
+    }
+    
     public func preloadNextVideoPlayerItem(prevId: UUID, direction: VideoPlayerScrollDirection) {
         // ...
     }
@@ -37,22 +57,28 @@ public class VideoService {
     public func loadVideoMetadataForNextItems(prevId: UUID, count: Int, direction: VideoPlayerScrollDirection) {
         // ...
     }
+    
+    public func toggleVideoPlayback() {
+        videoPlayerIsPlaying.toggle()
+        if videoPlayerIsPlaying {
+            videoPlayer.play()
+        } else {
+            videoPlayer.pause()
+        }
+    }
+    
+    public func toggleInterstitialVideoPlayback() {
+        interstitialVideoPlayerIsPlaying.toggle()
+        if interstitialVideoPlayerIsPlaying {
+            interstitialVideoPlayer.play()
+        } else {
+            interstitialVideoPlayer.pause()
+        }
+    }
 }
 
 extension VideoService {
     public func loadSampleItems() {
-        self.playerItems = [
-            .video(meta: .init(title: "Video 1")),
-            .video(meta: .init(title: "Video 2")),
-            .video(meta: .init(title: "Video 3")),
-            .interstitial(meta: .init(title: "Advert 1")),
-            .video(meta: .init(title: "Video 4")),
-            .video(meta: .init(title: "Video 5")),
-            .video(meta: .init(title: "Video 6")),
-            .interstitial(meta: .init(title: "Advert 2")),
-            .video(meta: .init(title: "Video 7")),
-            .video(meta: .init(title: "Video 8")),
-            .video(meta: .init(title: "Video 9"))
-        ]
+        self.playerItems = .init(VideoPlayerSamples.videoPlayerItems)
     }
 }

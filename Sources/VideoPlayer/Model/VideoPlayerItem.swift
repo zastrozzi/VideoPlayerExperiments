@@ -32,5 +32,27 @@ public enum VideoPlayerItem: Identifiable, Sendable {
             false
         }
     }
+    
+    public var source: URL {
+        switch self {
+        case let .interstitial(meta): meta.source
+        case let .video(meta): meta.source
+        }
+    }
+    
+    public var thumbnailSource: URL {
+        switch self {
+        case let .interstitial(meta): meta.thumbnailSource
+        case let .video(meta): meta.thumbnailSource
+        }
+    }
+    
+    public var contentType: VideoPlayerContentType {
+        if case .interstitial = self {
+            .interstitial
+        } else {
+            .video
+        }
+    }
 }
 

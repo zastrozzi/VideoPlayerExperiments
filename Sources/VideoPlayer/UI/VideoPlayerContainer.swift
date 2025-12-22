@@ -12,32 +12,28 @@ struct VideoPlayerContainer: View {
     @State var service: VideoService = .init()
     @Namespace var playerContainerNamespace
     
+    var horizontalPadding: CGFloat = 15
+    var verticalPadding: CGFloat = 15
+    
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(service.playerItems) { playerItem in
-                    VStack {
-                        Text(playerItem.title)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(playerItem.isInterstitial ? Color.green : Color.blue, in: .rect(cornerRadius: 16))
-                    .overlay(alignment: .bottom) {
-                        if service.isCurrentPlayerItem(playerItem.id) {
-                            if playerItem.isInterstitial {
-                                interstitialPlayerOverlay
-                            } else {
-                                videoPlayerOverlay
-                            }
+                    Group {
+                        switch playerItem {
+                        case let .interstitial(meta): interstitialPlayerItem(meta)
+                        case let .video(meta): videoPlayerItem(meta)
                         }
                     }
-                    .padding()
-                    .containerRelativeFrame([.horizontal])
+                    .padding(horizontalPadding)
+//                    .containerRelativeFrame([.horizontal])
                     .containerRelativeFrame(.vertical, count: 1, spacing: 20, alignment: .center)
-                    .scrollTransition(.animated.threshold(.centered)) { content, phase in
+                    .scrollTransition(.animated.threshold(.visible(0.9))) { content, phase in
                         switch phase {
                         case .identity:
                             Task { @MainActor in
                                 service.currentPlayerItemId = playerItem.id
+                                service.loadCurrentVideoPlayerItem(for: playerItem.id)
                                 // service.startAutoplayForVideoPlayer...
                             }
                         case .bottomTrailing:
@@ -52,7 +48,7 @@ struct VideoPlayerContainer: View {
                             }
                         }
                         return content
-                            .opacity(phase.isIdentity ? 1 : 0.2)
+                            .opacity(phase.isIdentity ? 1 : 0.8)
                     }
                 }
             }
@@ -69,18 +65,105 @@ struct VideoPlayerContainer: View {
     }
     
     @ViewBuilder
-    var videoPlayerOverlay: some View {
+    var videoPlayer: some View {
         VideoPlayer(player: service.videoPlayer)
+            .aspectRatio(contentMode: .fill)
+            .containerRelativeFrame([.horizontal, .vertical]) { length, axis in
+                if axis == .vertical {
+                    return length - (verticalPadding * 2)
+                }
+                if axis == .horizontal {
+                    return length - (horizontalPadding * 2)
+                }
+                else {
+                    return length
+                }
+            }
             .clipShape(.rect(cornerRadius: 16))
-            .matchedGeometryEffect(id: "videoPlayerOverlay", in: playerContainerNamespace)
+            .matchedGeometryEffect(id: "videoPlayer", in: playerContainerNamespace)
+            .onAppear {
+                service.videoPlayer.pause()
+            }
     }
     
     @ViewBuilder
-    var interstitialPlayerOverlay: some View {
+    var interstitialPlayer: some View {
         VideoPlayer(player: service.interstitialVideoPlayer)
+            .aspectRatio(contentMode: .fill)
+            .containerRelativeFrame([.horizontal, .vertical]) { length, axis in
+                if axis == .vertical {
+                    return length - (verticalPadding * 2)
+                }
+                if axis == .horizontal {
+                    return length - (horizontalPadding * 2)
+                }
+                else {
+                    return length
+                }
+            }
             .clipShape(.rect(cornerRadius: 16))
-            .matchedGeometryEffect(id: "interstitialPlayerOverlay", in: playerContainerNamespace)
+            .matchedGeometryEffect(id: "interstitialPlayer", in: playerContainerNamespace)
+            .onAppear {
+                service.interstitialVideoPlayer.pause()
+            }
+    }
+    
+    @ViewBuilder
+    func videoPlayerItem(_ metadata: VideoMetadata) -> some View {
+        ZStack {
+            CacheableAsyncImage(url: metadata.thumbnailSource, transaction: .init(animation: .easeInOut)) { phase in
+                if let image = phase.image {
+                    image.resizable()
+                } else {
+                    Rectangle().fill(Material.thin)
+                }
+            }
+            .scaledToFill()
+            .containerRelativeFrame(.horizontal) { length, axis in
+                return length - (horizontalPadding * 2)
+            }
             
+            if service.isCurrentPlayerItem(metadata.id) {
+                videoPlayer
+                    .allowsHitTesting(false)
+                    .transition(.opacity.animation(.easeInOut))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.blue)
+        .clipShape(.rect(cornerRadius: 16))
+        .onTapGesture {
+            service.toggleVideoPlayback()
+        }
+    }
+    
+    @ViewBuilder
+    func interstitialPlayerItem(_ metadata: InterstitialVideoMetadata) -> some View {
+        ZStack {
+            CacheableAsyncImage(url: metadata.thumbnailSource, transaction: .init(animation: .easeInOut)) { phase in
+                if let image = phase.image {
+                    image.resizable()
+                } else {
+                    Rectangle().fill(Material.thin)
+                }
+            }
+            .scaledToFill()
+            .containerRelativeFrame(.horizontal) { length, axis in
+                return length - (horizontalPadding * 2)
+            }
+            
+            if service.isCurrentPlayerItem(metadata.id) {
+                interstitialPlayer
+                    .allowsHitTesting(false)
+                    .transition(.opacity.animation(.easeInOut))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.green)
+        .clipShape(.rect(cornerRadius: 16))
+        .onTapGesture {
+            service.toggleInterstitialVideoPlayback()
+        }
     }
 }
 

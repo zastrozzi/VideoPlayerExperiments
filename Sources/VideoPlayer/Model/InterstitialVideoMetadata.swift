@@ -10,9 +10,18 @@ import Foundation
 public struct InterstitialVideoMetadata: Identifiable, Codable, Equatable, Sendable {
     public var id: UUID
     public var title: String
+    public var source: URL
+    public var thumbnailSource: URL
     
-    public init(id: UUID = .init(), title: String) {
+    public init(
+        id: UUID = .init(),
+        title: String,
+        source: URL,
+        thumbnailSource: URL
+    ) {
         self.id = id
         self.title = title
+        self.source = source
+        self.thumbnailSource = thumbnailSource
     }
 }
