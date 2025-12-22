@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct VideoMetadata: Identifiable, Codable, Equatable, Sendable {
+public struct ContentVideoMetadata: Identifiable, Codable, Equatable, Sendable {
     public var id: UUID
     public var title: String
     public var source: URL

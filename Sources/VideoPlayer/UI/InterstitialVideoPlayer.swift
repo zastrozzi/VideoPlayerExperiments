@@ -6,8 +6,3 @@
 //
 
 import Foundation
-
-public enum VideoPlayerContentType {
-    case video
-    case interstitial
-}

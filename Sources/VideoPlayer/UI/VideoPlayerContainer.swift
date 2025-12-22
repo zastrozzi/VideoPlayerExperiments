@@ -22,7 +22,7 @@ struct VideoPlayerContainer: View {
                     Group {
                         switch playerItem {
                         case let .interstitial(meta): interstitialPlayerItem(meta)
-                        case let .video(meta): videoPlayerItem(meta)
+                        case let .content(meta): contentVideoPlayerItem(meta)
                         }
                     }
                     .padding(horizontalPadding)
@@ -32,7 +32,7 @@ struct VideoPlayerContainer: View {
                         switch phase {
                         case .identity:
                             Task { @MainActor in
-                                service.stopAutoplay(for: playerItem.id)
+                                service.stopAutoplay()
                                 service.loadVideoPlayerItem(for: playerItem.id)
                                 service.startAutoplay(for: playerItem.id)
                                 // service.startAutoplayForVideoPlayer...
@@ -66,8 +66,8 @@ struct VideoPlayerContainer: View {
     }
     
     @ViewBuilder
-    var videoPlayer: some View {
-        VideoPlayer(player: service.videoPlayer)
+    var contentVideoPlayer: some View {
+        VideoPlayer(player: service.contentVideoPlayer)
             .aspectRatio(contentMode: .fill)
             .containerRelativeFrame([.horizontal, .vertical]) { length, axis in
                 if axis == .vertical {
@@ -83,7 +83,7 @@ struct VideoPlayerContainer: View {
             .clipShape(.rect(cornerRadius: 16))
             .matchedGeometryEffect(id: "videoPlayer", in: playerContainerNamespace)
             .onAppear {
-                service.videoPlayer.pause()
+                service.contentVideoPlayer.pause()
             }
     }
     
@@ -110,7 +110,7 @@ struct VideoPlayerContainer: View {
     }
     
     @ViewBuilder
-    func videoPlayerItem(_ metadata: VideoMetadata) -> some View {
+    func contentVideoPlayerItem(_ metadata: ContentVideoMetadata) -> some View {
         ZStack {
             CacheableAsyncImage(url: metadata.thumbnailSource, transaction: .init(animation: .easeInOut)) { phase in
                 if let image = phase.image {
@@ -125,7 +125,7 @@ struct VideoPlayerContainer: View {
             }
             
             if service.isCurrentPlayerItem(metadata.id) {
-                videoPlayer
+                contentVideoPlayer
                     .allowsHitTesting(false)
                     .transition(.opacity.animation(.easeInOut))
             }
@@ -134,7 +134,7 @@ struct VideoPlayerContainer: View {
         .background(Color.blue)
         .clipShape(.rect(cornerRadius: 16))
         .onTapGesture {
-            service.toggleVideoPlayback()
+            service.toggleContentVideoPlayback()
         }
     }
     

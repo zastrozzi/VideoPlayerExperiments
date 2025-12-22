@@ -15,15 +15,15 @@ public class VideoService {
     public var currentPlayerItemId: UUID? = nil
     public var playerItems: Deque<VideoPlayerItem> = []
     
-    public var videoPlayerIsPlaying: Bool = false
+    public var contentVideoPlayerIsPlaying: Bool = false
     public var interstitialVideoPlayerIsPlaying: Bool = false
     
-    @ObservationIgnored public var videoPlayer: AVPlayer = .init()
+    @ObservationIgnored public var contentVideoPlayer: AVPlayer = .init()
     @ObservationIgnored public var interstitialVideoPlayer: AVPlayer = .init()
     
-    @ObservationIgnored public var currentVideoPlayerItem: AVPlayerItem? = nil
-    @ObservationIgnored public var nextVideoPlayerItem: AVPlayerItem? = nil
-    @ObservationIgnored public var previousVideoPlayerItem: AVPlayerItem? = nil
+    @ObservationIgnored public var currentContentVideoPlayerItem: AVPlayerItem? = nil
+    @ObservationIgnored public var nextContentVideoPlayerItem: AVPlayerItem? = nil
+    @ObservationIgnored public var previousContentVideoPlayerItem: AVPlayerItem? = nil
     
     @ObservationIgnored public var currentInterstitialVideoPlayerItem: AVPlayerItem? = nil
     @ObservationIgnored public var nextInterstitialVideoPlayerItem: AVPlayerItem? = nil
@@ -35,30 +35,30 @@ public class VideoService {
     
     public func loadVideoPlayerItem(for id: UUID) {
         if let item = playerItems.first(where: { $0.id == id }) {
-            switch item.contentType {
+            switch item.itemType {
             case .interstitial:
                 currentInterstitialVideoPlayerItem = .init(url: item.source)
                 interstitialVideoPlayer.replaceCurrentItem(with: currentInterstitialVideoPlayerItem)
-            case .video:
-                currentVideoPlayerItem = .init(url: item.source)
-                videoPlayer.replaceCurrentItem(with: currentVideoPlayerItem)
+            case .content:
+                currentContentVideoPlayerItem = .init(url: item.source)
+                contentVideoPlayer.replaceCurrentItem(with: currentContentVideoPlayerItem)
             }
         }
     }
     
-    public func stopAutoplay(for id: UUID) {
+    public func stopAutoplay() {
         interstitialVideoPlayer.pause()
-        videoPlayer.pause()
+        contentVideoPlayer.pause()
     }
     
     public func startAutoplay(for id: UUID) {
         currentPlayerItemId = id
         if let item = playerItems.first(where: { $0.id == id }) {
-            switch item.contentType {
+            switch item.itemType {
             case .interstitial:
                 interstitialVideoPlayer.play()
-            case .video:
-                videoPlayer.play()
+            case .content:
+                contentVideoPlayer.play()
             }
         }
     }
@@ -71,12 +71,12 @@ public class VideoService {
         // ...
     }
     
-    public func toggleVideoPlayback() {
-        videoPlayerIsPlaying.toggle()
-        if videoPlayerIsPlaying {
-            videoPlayer.play()
+    public func toggleContentVideoPlayback() {
+        contentVideoPlayerIsPlaying.toggle()
+        if contentVideoPlayerIsPlaying {
+            contentVideoPlayer.play()
         } else {
-            videoPlayer.pause()
+            contentVideoPlayer.pause()
         }
     }
     
@@ -94,7 +94,7 @@ extension VideoService {
     public func loadSampleItems() {
         self.playerItems = .init(VideoPlayerSamples.videoPlayerItems)
         if let first = self.playerItems.first {
-            self.stopAutoplay(for: first.id)
+            self.stopAutoplay()
             self.loadVideoPlayerItem(for: first.id)
             self.startAutoplay(for: first.id)
         }
