@@ -1,6 +1,6 @@
 //
-//  SwiftUIView.swift
-//  VideoPlayer
+//  VideoPlayerContainer.swift
+//  VideoPlayerExperiments
 //
 //  Created by Jonathan Forbes on 22/12/2025.
 //
