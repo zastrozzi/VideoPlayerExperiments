@@ -8,7 +8,7 @@
 import SwiftUI
 import AVKit
 
-struct InterstitialVideoPlayer: UIViewControllerRepresentable {
+struct ContentVideoPlayer: UIViewControllerRepresentable {
     @Binding var player: AVPlayer
     
     func makeUIViewController(

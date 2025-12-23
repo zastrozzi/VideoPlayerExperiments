@@ -54,5 +54,21 @@ public enum VideoPlayerItem: Identifiable, Sendable {
             .content
         }
     }
+    
+    public var asInterstitial: InterstitialVideoMetadata? {
+        if case let .interstitial(meta) = self {
+            meta
+        } else {
+            nil
+        }
+    }
+    
+    public var asContent: ContentVideoMetadata? {
+        if case let .content(meta) = self {
+            meta
+        } else {
+            nil
+        }
+    }
 }
 

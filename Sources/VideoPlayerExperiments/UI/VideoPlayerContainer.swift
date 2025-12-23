@@ -9,8 +9,10 @@ import SwiftUI
 import AVKit
 
 struct VideoPlayerContainer: View {
-    @State var service: VideoService = .init()
+    @State var service: VideoService = .initWithSamples()
     @Namespace var playerContainerNamespace
+    
+//    @State private var activeVideoPlayerItem: VideoPlayerItem.ID?
     
     var horizontalPadding: CGFloat = 15
     var verticalPadding: CGFloat = 15
@@ -21,150 +23,40 @@ struct VideoPlayerContainer: View {
                 ForEach(service.playerItems) { playerItem in
                     Group {
                         switch playerItem {
-                        case let .interstitial(meta): interstitialPlayerItem(meta)
-                        case let .content(meta): contentVideoPlayerItem(meta)
+                        case let .interstitial(meta): InterstitialVideoContainer(metadata: meta)
+                        case let .content(meta): ContentVideoContainer(metadata: meta)
+                                
                         }
                     }
-                    .padding(horizontalPadding)
-//                    .containerRelativeFrame([.horizontal])
-                    .containerRelativeFrame(.vertical, count: 1, spacing: 20, alignment: .center)
-                    .scrollTransition(.animated.threshold(.centered)) { content, phase in
-                        switch phase {
-                        case .identity:
-                            Task { @MainActor in
-                                service.stopAutoplay()
-                                service.loadVideoPlayerItem(for: playerItem.id)
-                                service.startAutoplay(for: playerItem.id)
-                                // service.startAutoplayForVideoPlayer...
-                            }
-                        case .bottomTrailing:
-                            Task { @MainActor in
-                                 service.preloadNextVideoPlayerItem(prevId: playerItem.id, direction: .reverse)
-                                 service.loadVideoMetadataForNextItems(prevId: playerItem.id, count: 3, direction: .reverse)
-                            }
-                        case .topLeading:
-                            Task { @MainActor in
-                                 service.preloadNextVideoPlayerItem(prevId: playerItem.id, direction: .forward)
-                                 service.loadVideoMetadataForNextItems(prevId: playerItem.id, count: 3, direction: .forward)
-                            }
-                        }
-                        return content
-                            .opacity(phase.isIdentity ? 1 : 0.8)
-                    }
+                    .environment(service)
+                    .padding(.vertical, verticalPadding)
+                    .containerRelativeFrame(.vertical, count: 1, spacing: verticalPadding, alignment: .center)
+
                 }
             }
             .scrollTargetLayout()
         }
         .scrollTargetBehavior(.paging)
-        .task {
-            service.loadSampleItems()
+        .scrollPosition(id: $service.currentPlayerItemId, anchor: .center)
+        .onChange(of: service.currentPlayerItemId, initial: true) { oldId, newId in
+            handleVideoPlayerItemChange(id: newId)
         }
+        .scrollDisabled(service.interstitialVideoPlayerIsPlaying)
+        
+    }
+    
+    func handleVideoPlayerItemChange(id: UUID?) {
+        guard let currentId = id ?? service.playerItems.first?.id else {
+            print("No ID")
+            return
+        }
+        service.stopAutoplay()
+        service.loadVideoPlayerItem(for: currentId, settingAsCurrent: id == nil)
+        service.startAutoplay(for: currentId)
     }
     
     func setCurrentPlayerItem(_ id: UUID) {
         service.currentPlayerItemId = id
-    }
-    
-    @ViewBuilder
-    var contentVideoPlayer: some View {
-        VideoPlayer(player: service.contentVideoPlayer)
-            .aspectRatio(contentMode: .fill)
-            .containerRelativeFrame([.horizontal, .vertical]) { length, axis in
-                if axis == .vertical {
-                    return length - (verticalPadding * 2)
-                }
-                if axis == .horizontal {
-                    return length - (horizontalPadding * 2)
-                }
-                else {
-                    return length
-                }
-            }
-            .clipShape(.rect(cornerRadius: 16))
-            .matchedGeometryEffect(id: "videoPlayer", in: playerContainerNamespace)
-            .onAppear {
-                service.contentVideoPlayer.pause()
-            }
-    }
-    
-    @ViewBuilder
-    var interstitialPlayer: some View {
-        VideoPlayer(player: service.interstitialVideoPlayer)
-            .aspectRatio(contentMode: .fill)
-            .containerRelativeFrame([.horizontal, .vertical]) { length, axis in
-                if axis == .vertical {
-                    return length - (verticalPadding * 2)
-                }
-                if axis == .horizontal {
-                    return length - (horizontalPadding * 2)
-                }
-                else {
-                    return length
-                }
-            }
-            .clipShape(.rect(cornerRadius: 16))
-            .matchedGeometryEffect(id: "interstitialPlayer", in: playerContainerNamespace)
-            .onAppear {
-                service.interstitialVideoPlayer.pause()
-            }
-    }
-    
-    @ViewBuilder
-    func contentVideoPlayerItem(_ metadata: ContentVideoMetadata) -> some View {
-        ZStack {
-            CacheableAsyncImage(url: metadata.thumbnailSource, transaction: .init(animation: .easeInOut)) { phase in
-                if let image = phase.image {
-                    image.resizable()
-                } else {
-                    Rectangle().fill(Material.thin)
-                }
-            }
-            .scaledToFill()
-            .containerRelativeFrame(.horizontal) { length, axis in
-                return length - (horizontalPadding * 2)
-            }
-            
-            if service.isCurrentPlayerItem(metadata.id) {
-                contentVideoPlayer
-                    .allowsHitTesting(false)
-                    .transition(.opacity.animation(.easeInOut))
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.blue)
-        .clipShape(.rect(cornerRadius: 16))
-        .onTapGesture {
-            service.toggleContentVideoPlayback()
-        }
-    }
-    
-    @ViewBuilder
-    func interstitialPlayerItem(_ metadata: InterstitialVideoMetadata) -> some View {
-        ZStack {
-            CacheableAsyncImage(url: metadata.thumbnailSource, transaction: .init(animation: .easeInOut)) { phase in
-                if let image = phase.image {
-                    image.resizable()
-                } else {
-                    Rectangle().fill(Material.thin)
-                }
-            }
-            .scaledToFill()
-            .containerRelativeFrame(.horizontal) { length, axis in
-                return length - (horizontalPadding * 2)
-            }
-            
-            if service.isCurrentPlayerItem(metadata.id) {
-                interstitialPlayer
-                    .allowsHitTesting(false)
-                    .transition(.opacity.animation(.easeInOut))
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.green)
-        .clipShape(.rect(cornerRadius: 16))
-        .onTapGesture {
-            service.toggleInterstitialVideoPlayback()
-        }
     }
 }
 
