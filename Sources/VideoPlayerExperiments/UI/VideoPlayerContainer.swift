@@ -10,9 +10,6 @@ import AVKit
 
 struct VideoPlayerContainer: View {
     @State var service: VideoService = .initWithSamples()
-    @Namespace var playerContainerNamespace
-    
-//    @State private var activeVideoPlayerItem: VideoPlayerItem.ID?
     
     var horizontalPadding: CGFloat = 15
     var verticalPadding: CGFloat = 15
