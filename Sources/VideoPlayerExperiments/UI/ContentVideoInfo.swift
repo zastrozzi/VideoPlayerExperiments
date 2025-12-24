@@ -13,31 +13,38 @@ struct ContentVideoInfo: View {
     
     var metadata: ContentVideoMetadata
     
+    
+    
     init(metadata: ContentVideoMetadata) {
         self.metadata = metadata
     }
     
     var body: some View {
+        var verticalPadding: CGFloat = 12
+        var horizontalPadding: CGFloat = 16
+        var cornerRadius: CGFloat = 18
+        
         GlassEffectContainer {
             HStack {
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(metadata.title)
-                        .font(.headline)
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .padding(.top, 10)
-                        .padding(.leading, 12)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                        .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
+//                        .padding(.top, verticalPadding)
+//                        .padding(.leading, horizontalPadding)
+
                     
-                    Text("Content")
-                        .font(.caption)
+                    Text(videoTimeDisplay)
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .padding(.bottom, 10)
-                        .padding(.leading, 12)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                        .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
+//                        .padding(.bottom, verticalPadding)
+//                        .padding(.leading, horizontalPadding)
+                        
                 }
-                
+                .safeAreaPadding(.leading, horizontalPadding)
+                .safeAreaPadding(.vertical, verticalPadding)
+                .glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+                .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
                 Spacer()
                 Button {
                     withAnimation {
@@ -51,12 +58,13 @@ struct ContentVideoInfo: View {
                         ) ? "pause.circle" : "play.circle"
                     )
                     .labelStyle(.iconOnly)
-                    .font(.title3)
-                    .padding()
+                    .font(.title)
                 }
                 .buttonStyle(.plain)
                 .contentShape(.circle)
-                .glassEffect(.regular.interactive())
+                .safeAreaPadding(.trailing, horizontalPadding)
+                .safeAreaPadding(.vertical, verticalPadding)
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: cornerRadius))
                 .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
             }
         }
@@ -64,6 +72,22 @@ struct ContentVideoInfo: View {
     
     var isCurrentPlayerItem: Bool {
         videoService.currentPlayerItemId == metadata.id
+    }
+    
+    var videoTimeDisplay: String {
+        guard isCurrentPlayerItem else { return "-:--/-:--"}
+        func formatMMSS(_ seconds: Double) -> String {
+            let totalSeconds = max(0, Int(seconds.rounded(.down)))
+            let minutes = totalSeconds / 60
+            let remainingSeconds = totalSeconds % 60
+            
+            return String(format: "%d:%02d", minutes, remainingSeconds)
+        }
+        let elapsedSeconds = videoService.currentContentVideoTotalSeconds * videoService.currentContentVideoProgress
+        let elapsed = formatMMSS(elapsedSeconds)
+        let total = formatMMSS(videoService.currentContentVideoTotalSeconds)
+        return "\(elapsed) / \(total)"
+//        return total
     }
 }
 
@@ -82,6 +106,6 @@ struct ContentVideoInfo: View {
     .environment(videoService)
     .task {
         videoService.loadVideoPlayerItem(for: metadata.id, settingAsCurrent: true)
-        videoService.startAutoplay(for: metadata.id)
+//        videoService.startAutoplay(for: metadata.id)
     }
 }

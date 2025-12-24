@@ -29,7 +29,7 @@ struct ContentVideoScrubber: View {
             Rectangle()
                 .fill(.yellow)
                 .scaleEffect(
-                    x: isCurrentPlayerItem ? videoService.currentContentVideoProgress : 0,
+                    x: isCurrentPlayerItem ? max(0, videoService.currentContentVideoProgress) : 0,
                     anchor: .leading
                 )
             
@@ -47,7 +47,7 @@ struct ContentVideoScrubber: View {
                         .frame(width: 50, height: 50)
                         .contentShape(Rectangle())
                         
-                        .offset(x: (proxy.size.width * videoService.currentContentVideoProgress) - 8.5, y: -8.5)
+                        .offset(x: max(0, (proxy.size.width * videoService.currentContentVideoProgress)) - 8.5, y: -8.5)
                         .gesture(
                             DragGesture()
                                 .updating($isScrubberDragging, body: { _, out, _ in

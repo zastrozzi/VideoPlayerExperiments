@@ -9,104 +9,78 @@ import SwiftUI
 
 struct InterstitialVideoContainer: View {
     @Environment(VideoService.self) var videoService
-    @Namespace private var videoInfoGlassNamespace
+    var namespace: Namespace.ID
     
     var metadata: InterstitialVideoMetadata
     var allowsPlaybackControl: Bool
+    var playerStateAnimation: Animation = .smooth(duration: 0.8)
     
-    init(metadata: InterstitialVideoMetadata, allowsPlaybackControl: Bool = false) {
+    init(metadata: InterstitialVideoMetadata, namespace: Namespace.ID, allowsPlaybackControl: Bool = false) {
         self.metadata = metadata
         self.allowsPlaybackControl = allowsPlaybackControl
+        self.namespace = namespace
     }
     
     var body: some View {
         @Bindable var videoService = videoService
-        Group {
-            if isCurrentPlayerItem {
-                InterstitialVideoPlayer(player: $videoService.interstitialVideoPlayer)
-            } else {
-                RoundedRectangle(cornerRadius: 16)
-            }
-        }
-        .matchedGeometryEffect(id: "interstitial", in: videoService.videoPlayerNamespace.wrappedValue)
-        .overlay(alignment: .bottom) {
-            GlassEffectContainer {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(metadata.title)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                            .padding(.top, 10)
-                            .padding(.leading, 12)
-                            .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                            .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
-                        
-                        Text("Sponsored")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.bottom, 10)
-                            .padding(.leading, 12)
-                            .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                            .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
-                    }
-                    
-                    Spacer()
-                    if allowsPlaybackControl {
-                        Button {
-                            withAnimation {
-                                videoService.toggleInterstitialVideoPlayback(for: metadata.id)
-                            }
-                        } label: {
-                            Label(
-                                "Play/Pause",
-                                systemImage: isCurrentPlayerItem && videoService.interstitialVideoPlayerIsPlaying ? "pause.circle" : "play.circle"
-                            )
-                            .labelStyle(.iconOnly)
-                            .font(.title3)
-                            .padding()
-                        }
-                        .buttonStyle(.plain)
-                        .contentShape(.circle)
-                        .glassEffect(.regular.interactive())
-                        .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
-                    }
-                    Text(secondsRemaining)
-                        .font(.headline)
-                        .frame(width: 30)
-                        .padding(.trailing, 12)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                        .glassEffectUnion(id: 1, namespace: videoInfoGlassNamespace)
+        ConcentricRectangle(corners: .concentric, isUniform: true).fill(Material.thin)
+            .overlay {
+                if isCurrentPlayerItem {
+                    InterstitialVideoPlayer(player: $videoService.interstitialVideoPlayer)
+                    // .matchedGeometryEffect(id: "video-player", in: namespace)
                 }
             }
-            .padding(8)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 19, style: .continuous)
-                .trim(from: 0, to: videoService.currentInterstitialVideoProgress)
-                .stroke(Color.yellow, style: .init(lineWidth: 10, lineCap: .round, lineJoin: .round), antialiased: true)
+            .overlay {
+                if !isCurrentPlayerItem {
+                    CacheableAsyncImage(
+                        url: metadata.thumbnailSource,
+                        transaction: .init(
+                            animation: playerStateAnimation
+                        )
+                    ) { phase in
+                        if let image = phase.image {
+                            image.resizable()
+                        } else {
+                            Rectangle().fill(Material.thin)
+                        }
+                    }
+                }
+            }
+            .clipShape(.rect(corners: .concentric, isUniform: true))
+            .overlay {
                 
-        }
-        .clipShape(.rect(cornerRadius: 16, style: .continuous))
-        .padding(.horizontal)
+                ConcentricRectangle(corners: .concentric, isUniform: true)
+                    .inset(amount: 2.5)
+                    .trim(from: 0, to: videoService.currentInterstitialVideoProgress)
+                    .stroke(Color.yellow.gradient, style: .init(lineWidth: 5, lineCap: .round, lineJoin: .round), antialiased: true)
+                
+            }
+            .clipShape(.rect(corners: .concentric, isUniform: true))
+            .overlay(alignment: .bottom) {
+                if isCurrentPlayerItem {
+                    VStack(spacing: 10) {
+                        
+                        InterstitialVideoInfo(metadata: metadata, allowsPlaybackControl: allowsPlaybackControl)
+                            .matchedGeometryEffect(id: "video-info", in: namespace)
+                    }
+                    .padding(8)
+                }
+            }
             
+            .padding(.horizontal, 10)
+            .animation(playerStateAnimation, value: isCurrentPlayerItem)
+            .shadow(radius: 10)
+//            .ignoresSafeArea()
     }
     
     var isCurrentPlayerItem: Bool {
         videoService.currentPlayerItemId == metadata.id
     }
-    
-    var secondsRemaining: String {
-        guard isCurrentPlayerItem else { return "\u{00a0}" }
-        let value = videoService.currentInterstitialVideoSecondsRemaining
-        if value == .zero { return "\u{00a0}" }
-        return String(format: "%.0f", value)
-    }
-    
 }
 
 #Preview {
     @Previewable @State var videoService: VideoService = .initWithSamples()
-    
+    @Previewable @State var namespace: Namespace = .init()
     let metadata = videoService.playerItems
         .first(where: { item in
             item.isInterstitial
@@ -115,6 +89,7 @@ struct InterstitialVideoContainer: View {
     
     return InterstitialVideoContainer(
         metadata: metadata,
+        namespace: namespace.wrappedValue,
         allowsPlaybackControl: true
     )
     .environment(videoService)

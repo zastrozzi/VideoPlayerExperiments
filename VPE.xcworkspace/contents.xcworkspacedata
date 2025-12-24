@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:Package.resolved">
+   </FileRef>
+   <FileRef
+      location = "group:Package.swift">
+   </FileRef>
+   <Group
+      location = "group:Sources"
+      name = "Sources">
+      <Group
+         location = "group:VideoPlayerExperiments"
+         name = "VideoPlayerExperiments">
+         <Group
+            location = "group:UI"
+            name = "UI">
+            <FileRef
+               location = "group:VideoPlayerContainer.swift">
+            </FileRef>
+            <FileRef
+               location = "group:InterstitialVideoInfo.swift">
+            </FileRef>
+            <FileRef
+               location = "group:ContentVideoContainer.swift">
+            </FileRef>
+            <FileRef
+               location = "group:CacheableAsyncImage.swift">
+            </FileRef>
+            <FileRef
+               location = "group:ContentVideoScrubber.swift">
+            </FileRef>
+            <FileRef
+               location = "group:InterstitialVideoPlayer.swift">
+            </FileRef>
+            <FileRef
+               location = "group:ContentVideoPlayer.swift">
+            </FileRef>
+            <FileRef
+               location = "group:InterstitialVideoContainer.swift">
+            </FileRef>
+            <FileRef
+               location = "group:InsetShape.swift">
+            </FileRef>
+            <FileRef
+               location = "group:CGRect+Extensions.swift">
+            </FileRef>
+            <FileRef
+               location = "group:CGPoint+Extensions.swift">
+            </FileRef>
+            <FileRef
+               location = "group:ContentVideoInfo.swift">
+            </FileRef>
+         </Group>
+         <Group
+            location = "group:Samples"
+            name = "Samples">
+            <FileRef
+               location = "group:VideoPlayerSamples+VideoPlayerItems.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoPlayerSamples.swift">
+            </FileRef>
+         </Group>
+         <Group
+            location = "group:Model"
+            name = "Model">
+            <FileRef
+               location = "group:VideoPlayerItem.swift">
+            </FileRef>
+            <FileRef
+               location = "group:InterstitialVideoMetadata.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoPlayerItemType.swift">
+            </FileRef>
+            <FileRef
+               location = "group:ContentVideoMetadata.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoPlayerScrollDirection.swift">
+            </FileRef>
+         </Group>
+         <FileRef
+            location = "group:VideoPlayerExperiments.swift">
+         </FileRef>
+         <Group
+            location = "group:Services"
+            name = "Services">
+            <FileRef
+               location = "group:VideoService.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoService+FrameCapture.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoService+Samples.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoService+Playback.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoService+AssetLoading.swift">
+            </FileRef>
+            <FileRef
+               location = "group:VideoService+ProgressObservers.swift">
+            </FileRef>
+         </Group>
+      </Group>
+   </Group>
+   <Group
+      location = "group:Tests"
+      name = "Tests">
+      <Group
+         location = "group:VideoPlayerExperimentsTests"
+         name = "VideoPlayerExperimentsTests">
+         <FileRef
+            location = "group:VideoPlayerExperiments.xctestplan">
+         </FileRef>
+         <FileRef
+            location = "group:VideoPlayerExperimentsTests.swift">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "group:VideoPlayerDemo"
+      name = "VideoPlayerDemo">
+      <Group
+         location = "group:VideoPlayerDemo"
+         name = "VideoPlayerDemo">
+         <FileRef
+            location = "group:Assets.xcassets">
+         </FileRef>
+         <FileRef
+            location = "group:VideoPlayerDemoApp.swift">
+         </FileRef>
+         <FileRef
+            location = "group:ContentView.swift">
+         </FileRef>
+      </Group>
+   </Group>
+   <FileRef
+      location = "group:VideoPlayerDemo.xcodeproj">
+   </FileRef>
+</Workspace>

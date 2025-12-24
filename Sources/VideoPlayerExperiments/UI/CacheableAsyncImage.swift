@@ -36,7 +36,9 @@ public struct CacheableAsyncImage<Content: View>: View {
             }
             .task {
                 for await phase in cache.load(url: url).values {
-                    self.phase = phase
+                    withTransaction(self.transaction) {
+                        self.phase = phase
+                    }
                 }
             }
     }

@@ -26,6 +26,8 @@ extension VideoService {
     public func stopAutoplay() {
         interstitialVideoPlayer.pause()
         contentVideoPlayer.pause()
+        interstitialVideoPlayerIsPlaying = false
+        contentVideoPlayerIsPlaying = false
     }
     
     public func toggleContentVideoPlayback(for id: UUID) {

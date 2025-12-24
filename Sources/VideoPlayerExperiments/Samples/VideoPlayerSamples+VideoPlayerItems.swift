@@ -26,11 +26,12 @@ extension VideoPlayerSamples {
             ),
             .content(
                 meta: .init(
-                    title: "For Bigger Blazes",
-                    source: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")!,
-                    thumbnailSource: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg")!
+                    title: "Sintel",
+                    source: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4")!,
+                    thumbnailSource: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg")!
                 )
             ),
+            
             .interstitial(
                 meta: .init(
                     title: "For Bigger Escapes",
@@ -61,9 +62,9 @@ extension VideoPlayerSamples {
             ),
             .interstitial(
                 meta: .init(
-                    title: "Sintel",
-                    source: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4")!,
-                    thumbnailSource: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg")!
+                    title: "For Bigger Blazes",
+                    source: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")!,
+                    thumbnailSource: .init(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg")!
                 )
             ),
             .content(

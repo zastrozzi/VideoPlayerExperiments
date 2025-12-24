@@ -64,12 +64,16 @@ extension VideoService {
         ) { time in
             Task { @MainActor in
                 if let currentPlayerItem = self.contentVideoPlayer.currentItem {
-                    let totalDuration = currentPlayerItem.duration.seconds
+                    let totalDuration = currentPlayerItem.duration.isNumeric ? currentPlayerItem.duration.seconds : 0.000001
                     let currentDuration = self.contentVideoPlayer.currentTime().seconds
                     let calculatedProgress = currentDuration / totalDuration
+                    let totalSeconds =
                     withAnimation(.linear(duration: self.contentPlayerObservationFrequency)) {
                         self.currentContentVideoProgress = calculatedProgress
+                        self.currentContentVideoSecondsElapsed = calculatedProgress * totalDuration
                     }
+                    
+                    self.currentContentVideoTotalSeconds = totalDuration
                     
                     if calculatedProgress == 1 {
                         self.contentVideoPlayerIsPlaying = false

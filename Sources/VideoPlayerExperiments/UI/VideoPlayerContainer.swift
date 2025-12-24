@@ -8,48 +8,86 @@
 import SwiftUI
 import AVKit
 
-struct VideoPlayerContainer: View {
+public struct VideoPlayerContainer: View {
     @State var service: VideoService = .initWithSamples()
     
+    
+    @Namespace var playerNamespace
     var horizontalPadding: CGFloat = 15
     var verticalPadding: CGFloat = 15
+    @State var currentScrollOffset: CGFloat = 0
+    @State var scrollDirection: ScrollDirection = .idle
     
-    var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(service.playerItems) { playerItem in
-                    Group {
-                        switch playerItem {
-                        case let .interstitial(meta): InterstitialVideoContainer(metadata: meta)
-                        case let .content(meta): ContentVideoContainer(metadata: meta)
-                                
+    public init() {}
+    
+    public var body: some View {
+        ScrollViewReader { scrollProxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(service.playerItems) { playerItem in
+                        Group {
+                            switch playerItem {
+                            case let .interstitial(meta): InterstitialVideoContainer(metadata: meta, namespace: playerNamespace)
+                            case let .content(meta): ContentVideoContainer(metadata: meta, namespace: playerNamespace)
+                            }
+                        }
+                        .environment(service)
+                        .padding(.vertical, 5)
+                        .containerRelativeFrame(.vertical, count: 1, spacing: 10, alignment: .center)
+                        .scrollTransition(.animated.threshold(.centered)) { content, phase in
+                            return content
+                                .opacity(phase.isIdentity ? 1 : 0.5)
                         }
                     }
-                    .environment(service)
-                    .padding(.vertical, verticalPadding)
-                    .containerRelativeFrame(.vertical, count: 1, spacing: verticalPadding, alignment: .center)
-
                 }
+                .ignoresSafeArea()
+                .scrollTargetLayout()
             }
-            .scrollTargetLayout()
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $service.currentPlayerItemId, anchor: .center)
+            .onChange(of: service.currentPlayerItemId, initial: true) { oldId, newId in
+                handleVideoPlayerItemChange(hasPrevious: oldId != nil, isInitial: newId == nil, id: newId)
+            }
+            .scrollDisabled(service.interstitialVideoPlayerIsPlaying)
         }
-        .scrollTargetBehavior(.paging)
-        .scrollPosition(id: $service.currentPlayerItemId, anchor: .center)
-        .onChange(of: service.currentPlayerItemId, initial: true) { oldId, newId in
-            handleVideoPlayerItemChange(id: newId)
-        }
-        .scrollDisabled(service.interstitialVideoPlayerIsPlaying)
-        
     }
     
-    func handleVideoPlayerItemChange(id: UUID?) {
+    @ViewBuilder
+    var debugOverlay: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("currentScrollOffset")
+                    Spacer()
+                    Text("\(String(format: "%.2f", currentScrollOffset))")
+                }
+            }
+            .frame(maxWidth: .infinity)
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("scrollDirection")
+                    Spacer()
+                    Text(scrollDirection.rawValue)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .font(.caption)
+        .padding(10)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        .padding(.horizontal)
+    }
+    
+    func handleVideoPlayerItemChange(hasPrevious: Bool = true, isInitial: Bool = false, id: UUID?) {
         guard let currentId = id ?? service.playerItems.first?.id else {
             print("No ID")
             return
         }
         service.stopAutoplay()
-        service.loadVideoPlayerItem(for: currentId, settingAsCurrent: id == nil)
-        service.startAutoplay(for: currentId)
+        let skipToNext = !isInitial && !hasPrevious
+        if !skipToNext { service.loadVideoPlayerItem(for: currentId, settingAsCurrent: isInitial) }
+        if !isInitial { service.startAutoplay(for: currentId) }
     }
     
     func setCurrentPlayerItem(_ id: UUID) {

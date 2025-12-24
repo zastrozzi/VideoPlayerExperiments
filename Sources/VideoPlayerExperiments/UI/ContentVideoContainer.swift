@@ -10,47 +10,57 @@ import SwiftUI
 struct ContentVideoContainer: View {
     @Environment(VideoService.self) var videoService
     
+    var namespace: Namespace.ID
     var metadata: ContentVideoMetadata
+    var playerStateAnimation: Animation = .smooth(duration: 0.8)
     
-    init(metadata: ContentVideoMetadata) {
+    init(metadata: ContentVideoMetadata, namespace: Namespace.ID) {
         self.metadata = metadata
+        self.namespace = namespace
     }
     
     var body: some View {
         @Bindable var videoService = videoService
-        Group {
-            if isCurrentPlayerItem {
-                ContentVideoPlayer(player: $videoService.contentVideoPlayer)
-                    .matchedGeometryEffect(id: "content", in: videoService.videoPlayerNamespace.wrappedValue)
-            } else {
-                Rectangle().fill(Material.thin)
+        ConcentricRectangle(corners: .concentric, isUniform: true).fill(Material.thin)
+            .overlay {
+                if isCurrentPlayerItem {
+                    ContentVideoPlayer(player: $videoService.contentVideoPlayer)
+                    // .matchedGeometryEffect(id: "video-player", in: namespace)
+                }
             }
-        }
-        .transition(.opacity.animation(.easeInOut))
-        .overlay {
-            if !isCurrentPlayerItem {
-                CacheableAsyncImage(url: metadata.thumbnailSource, transaction: .init(animation: .easeInOut)) { phase in
-                    if let image = phase.image {
-                        image.resizable()
-                    } else {
-                        Rectangle().fill(Material.thin)
+            .overlay {
+                if !isCurrentPlayerItem {
+                    CacheableAsyncImage(
+                        url: metadata.thumbnailSource,
+                        transaction: .init(
+                            animation: playerStateAnimation
+                        )
+                    ) { phase in
+                        if let image = phase.image {
+                            image.resizable()
+                        } else {
+                            Rectangle().fill(Material.thin)
+                        }
                     }
                 }
-                .transition(.opacity.animation(.easeInOut))
             }
-        }
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 10) {
-                ContentVideoInfo(metadata: metadata)
-                ContentVideoScrubber(metadata: metadata)
+            .clipShape(.rect(corners: .concentric, isUniform: true))
+            .overlay(alignment: .bottom) {
+                if isCurrentPlayerItem {
+                    VStack(spacing: 10) {
+                        ContentVideoScrubber(metadata: metadata)
+                            .matchedGeometryEffect(id: "video-scrubber", in: namespace)
+                        ContentVideoInfo(metadata: metadata)
+                            .matchedGeometryEffect(id: "video-info", in: namespace)
+                        
+                    }
+                    .padding(8)
+//                    .padding(.vertical)
+                }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical)
-        }
-        
-        
-        .clipShape(.rect(cornerRadius: 16, style: .continuous))
-        .padding(.horizontal)
+            .animation(playerStateAnimation, value: isCurrentPlayerItem)
+            .padding(.horizontal, 10)
+            .shadow(radius: 10)
     }
 
     
@@ -64,7 +74,7 @@ struct ContentVideoContainer: View {
 
 #Preview {
     @Previewable @State var videoService: VideoService = .initWithSamples()
-    
+    @Previewable @State var namespace: Namespace = .init()
     let metadata = videoService.playerItems
         .first(where: { item in
             !item.isInterstitial
@@ -72,11 +82,12 @@ struct ContentVideoContainer: View {
         .asContent!
     
     return ContentVideoContainer(
-        metadata: metadata
+        metadata: metadata,
+        namespace: namespace.wrappedValue
     )
     .environment(videoService)
     .task {
         videoService.loadVideoPlayerItem(for: metadata.id, settingAsCurrent: true)
-        videoService.startAutoplay(for: metadata.id)
+//        videoService.startAutoplay(for: metadata.id)
     }
 }
